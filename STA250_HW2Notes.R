@@ -15,8 +15,31 @@ setwd("~/Desktop/STA_250_HW1")
 stopCluster(cl) # Stop the cluster & free up memory
 library(parallel)
 
+# *** PLOTS ***
+14:26:45 -
 
-filesplit[1]
+# *** CLUSTER TEST ***
+
+t.files = files[1:12] # Contains old only - 1 min read, 40 sec table
+t.files = files[69:80] # Contains new only - 16 sec read, 5 sec table
+t.files = files[14:23] # Contains both types - 40 sec read, 40 sec table
+
+cl = makeCluster(4, "FORK") # Create cluster of 4 nodes
+t.filesplit = clusterSplit(cl, t.files) # split files among nodes
+
+# This generates a list of size 4, with each one containing
+# many files' worth of delay times in numeric form
+delays.list = clusterApply(cl, t.filesplit, delays)
+
+# Condenses the whole list into a single vector
+delays.all = rapply(delays.list,c)
+# Forms frequency table
+delays.all = data.frame(table(delays.all)) # About 40 sec for first 12...
+# List all possible delay times, removing NAs
+delays.all = delays.all[1:nrow(delays.all)-1,] 
+delays.all # returns delay table
+
+plot(delays.all[,1],as.numeric(delays.all[,2]))
 
 # *** GREP TEST ***
 test.filesplit = filesplit
@@ -43,69 +66,9 @@ con = pipe(paste("cat", paste(test.old, collapse = " "),
            test = readLines(con) # contains all arrival delays
            close(con) # Closes defined connection
 
-# *** APPLYING STRATEGY TO WHOLE DATA SET
-
-# This captures everything at once. We want to divide this
-# over all clusters though.
-con = pipe(paste("cat", paste(files.old, collapse = " "),
-                    "| cut -f 15 -d, | egrep -v '^$' | 
-                    egrep -v 'ArrDelay' \
-                    cat", paste (files.new, collapse = " "),
-                    "| cut -f 45 -d, | egrep -v '^$' |
-                    egrep -v 'ARR_DEL15'"))
-
-
-           
-
-# GOAL: clusterApply gives a set of 20 filenames to each of
-# the four clusters. Once filenames are passed to a cluster,
-# it should grep the appropriate filenames, then pass
-
-delays = function(files){
-    # Splits the nodes files into old and new formats
-    files.old = files[grep('1[0-9]{3}.csv|200[0-7]{1}.csv', files)]
-    files.new = files[grep('[a-z].csv', files)]
-    
-    # Subjects each type of file to the appropriate regex
-    # commands, using paste to insert filenames to cat
-    con = pipe(paste("cat", paste(files.old, collapse = " "),
-                     "| cut -f 15 -d, | egrep -v '^$' | 
-                    egrep -v 'ArrDelay' \
-                    cat", paste (files.new, collapse = " "),
-                     "| cut -f 45 -d, | egrep -v '^$' |
-                    egrep -v 'ARR_DEL15'"))
-    open(con, open="r") # Opens the defined connection to read
-    delays = readLines(con) # contains all arrival delays
-    close(con) # Closes defined connection
-    delays = as.numeric(delays) # returns delay values
-    delays
-}
-
-files = list.files(pattern="csv$")
-cl = makeCluster(4, "FORK")
-filesplit = clusterSplit(cl, files)
-end = clusterApply(cl, filesplit, delays.notable)
-
-
-# *** TEST RUN with 1987-1994
-
-ff = listfiles(pattern="csv$", full.names=TRUE)
-
-# Here, let "files" be ff
-
-# Assignment 1 in a nutshell (retool your code!)
-# files
-f = function(files){
-    # Call shell/C/Java code to do things. Examples:
-    getFreqTable(fs) # where getFreq works
-    for(f in fs)
-        getFreqTable(f)
-}
-
-f(ff) # This should produce our results
 
 # ******
-# EXECUTED BELOW
+# PREVIOUS FUNCTIONS
 
 # NOTE: Alter delays to just COLLECT the data, NOT
 # to merge them into frequency tables yet! 
@@ -132,15 +95,6 @@ delays = function(files){
     delays = as.numeric(delays) # returns delay values
     delays
 }
-
-# STRATEGY
-test.files = c("1987.csv", "1988.csv")
-end2 = lapply(files, delays.notable)
-test = lapply(test.files, delays.notable)
-
-# Combine all lists into one big vector, then
-# take the table, as before
-test.2 = c(unlist(test[1]),unlist(test[2]))
 
 test.2 = rapply(test,c) # This appears to work!
 
