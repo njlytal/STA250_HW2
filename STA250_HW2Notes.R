@@ -78,6 +78,7 @@ library(parallel)
 # *** RECENT NOTES ***
 # The delays can fit in a table that runs -1500 to 2500
 
+# number of delay times via R cluster = 145574557
 
 # *** CLUSTER TABLE TEST ***
 t.files = files[1:12] # Contains old only - 1 min read, 40 sec table

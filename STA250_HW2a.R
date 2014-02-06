@@ -125,21 +125,23 @@ results.calb = list(time = time, results = c(mean = mu, median = med, sd = sd),
 
 # Compare:
 # OLD FREQ TABLE: (6.5665, 0, 31.5563), time(610.358, 24.485, 431.815)
-# clusterApply: (6.566486, 0, 31.555595), time(107.533, 7.204, 331.719) n = 145574557
-# clusterApplyLB: (6.566486, 0, 31.555595), time(107.984, 11.744, 267.892) n = same
-# clusterApplyLb takes 5/8 the time to complete.
+# clusterApply: (6.566486, 0, 31.555595), time(107.533, 7.204, 331.719) 
+# clusterApplyLB: (6.566486, 0, 31.555595), time(107.984, 11.744, 267.892) 
+
+# clusterApplyLb takes 5/8 the time of original method to complete.
 # Better but not ideal yet. In a perfect world, would cut
-# down to ~1/3, but this requires the table construction
+# down to <1/3, but this requires the table construction
 # to be parallelized.
-# I can get lists of frequency tables in delays(), BUT there
-# doesn't seem to be a reliable way to combine them WITHOUT
-# using the given Rthreads code.
+# I can get lists of frequency tables in delays(), BUT I
+# haven't refined a way to combine them smoothly yet.
+# Currently exploring options in STA250_HW2Notes.R
 
 # Currently, gain is noticeable but NOT as big as expected.
 # Mainly, this is because the table construction itself is
 # as of yet NOT parallelized, and takes up a couple minutes
 # of computing time. Furthermore, the files are NOT balanced
 # in an ideal fashion -- the first node has the 20 biggest files
-# compared to the 60 smaller ones on the other nodes. Ideally,
-# I would divided these up more smartly, or use clusterApplyLB.
+# compared to the 60 smaller ones on the other nodes. Thankfully,
+# clusterApplyLB improves this noticeably by allocating files to
+# nodes as they become free.
 
