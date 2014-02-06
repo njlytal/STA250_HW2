@@ -1,13 +1,6 @@
 # STA 250 HW 2 - METHOD 1: Clustering in R
 
 
-# GOAL: Take HW1 code for freq table and modify it to
-# work as a function rather than free-form.
-# Make a list with all relevant files, then group
-# it into proper chunks.
-# Run the cluster methods described in class, making
-# modifications as necessary
-
 # Basic setup
 setwd("~/Desktop/STA_250_HW1")
 library(parallel)
@@ -21,7 +14,6 @@ files = list.files(pattern="csv$")
 # Once the files are selected, we must create a function
 # that reads their contents and outputs the individual
 # delay values. It must account for the two file formats.
-
 
 delays = function(files){
     # Splits the nodes files into old and new formats
@@ -75,15 +67,17 @@ start = proc.time()
 cl = makeCluster(4, "FORK") # Create cluster of 4 nodes
 # filesplit = clusterSplit(cl, files) # split files among nodes
 
-# This generates a list of size 4, with each one containing
+# clusterApply generates a list of size 4, with each one containing
 # many files' worth of delay times in numeric form
 # delays.list = clusterApply(cl, filesplit, delays) (non-LB way)
+
+# clusterApplyLB generates a list with as many items as there are files,
+# with each item containing a single files delay times. By load
+# balancing, files are allocated more efficiently, and less time passes.
 delays.list = clusterApplyLB(cl, files, delays)
 
 
-
-
-# Condenses the whole list into a single vector
+# Condenses the entire list, with all delays, into a single vector
 delays.all = rapply(delays.list,c)
 # Forms frequency table
 delays.all = data.frame(table(delays.all))
