@@ -15,8 +15,10 @@ setwd("~/Desktop/STA_250_HW1")
 stopCluster(cl) # Stop the cluster & free up memory
 library(parallel)
 
-# *** PLOTS ***
-14:26:45 -
+# *** RECENT NOTES ***
+# The delays can fit in a table that runs -1500 to 2500
+
+
 
 # *** CLUSTER TEST ***
 

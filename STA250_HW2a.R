@@ -65,6 +65,10 @@ delays = function(files){
     delays # outputs delay values
 }
 
+
+# Start R profiling
+Rprof("/tmp/readSelectedLines.prof") # R profiling
+
 # Start time calculation
 start = proc.time()
 
@@ -75,6 +79,9 @@ cl = makeCluster(4, "FORK") # Create cluster of 4 nodes
 # many files' worth of delay times in numeric form
 # delays.list = clusterApply(cl, filesplit, delays) (non-LB way)
 delays.list = clusterApplyLB(cl, files, delays)
+
+
+
 
 # Condenses the whole list into a single vector
 delays.all = rapply(delays.list,c)
@@ -110,6 +117,9 @@ sd = sqrt((sum.prod2 - (sum.prod^2)/n)/(n-1))
 
 # End time calculation
 time = proc.time()-start
+# End R profiling
+Rprof(NULL)
+delay.lb.prof = summaryRprof("/tmp/readSelectedLines.prof")$by.self
 
 
 results.calb = list(time = time, results = c(mean = mu, median = med, sd = sd),
@@ -122,7 +132,7 @@ results.calb = list(time = time, results = c(mean = mu, median = med, sd = sd),
 # Compare:
 # OLD FREQ TABLE: (6.5665, 0, 31.5563), time(610.358, 24.485, 431.815)
 # clusterApply: (6.566486, 0, 31.555595), time(107.533, 7.204, 331.719) n = 145574557
-# clusterApplyLB: (6.566486, 0, 31.555595), time(110.464, 8.988, 269.008) n = same
+# clusterApplyLB: (6.566486, 0, 31.555595), time(107.984, 11.744, 267.892) n = same
 # clusterApplyLb takes 5/8 the time to complete.
 # Better but not ideal yet. In a perfect world, would cut
 # down to ~1/3, but this requires the table construction
