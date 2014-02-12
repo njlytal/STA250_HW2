@@ -1,5 +1,73 @@
 STA250 - HW 2 Notes
 
+# ****************************
+# **** NOTES FOR METHOD 2 ****
+
+# Working with a single Delay Table
+
+
+start = proc.time()
+delays2 = getDelayTable(path.expand("~/Desktop/STA_250_HW1/1988.csv"),
+                     15L)
+time = proc.time() - start
+
+# Working with multiple Delay Tables
+
+filelist = list(path.expand("~/Desktop/STA_250_HW1/1988.csv"),
+                path.expand("~/Desktop/STA_250_HW1/1989.csv"),
+                path.expand("~/Desktop/STA_250_HW1/1990.csv"),
+                path.expand("~/Desktop/STA_250_HW1/1991.csv"))
+
+start.t = proc.time()
+delays.t = getDelayTable_thread(filelist,15L)
+time.t = proc.time() - start.t
+
+
+names(delays2) # These are the factor levels
+as.numeric(delays2) # These are the actual values
+
+delays2.df = data.frame(names(delays2), as.numeric(delays2))
+
+x = as.numeric(names(delays2))
+reps = as.numeric(delays2)
+
+# This produces all the untabled values
+testrep = rep(x, reps) 
+
+
+# *** METHOD 1 Single File Test ***
+# By using paste, we can enter file names into a pipe
+# expression
+con = pipe(paste("cat 1988.csv | cut -f 15 -d, | egrep -v '^$' |
+           egrep -v 'ArrDelay'"))
+
+open(con, open="r") # Opens the defined connection to read
+delays = readLines(con) # contains all arrival delays
+close(con) # Closes defined connection
+
+delays = data.frame(table(delays))
+#removes NA counts, contained in last row of table
+delays = delays[1:nrow(delays)-1,] 
+# All possible delay times
+
+# There are DIFFERENCES BETWEEN THE TWO DATAFRAMES!
+# Debugging time
+
+# delays2: probably not 44 instances of "247" "315" and "1320"
+
+# delays: there are 44 instances of "-56" "-57" "270" and "273" 
+
+
+
+
+
+
+
+
+
+# ****************************
+# **** NOTES FOR METHOD 1 ****
+
 # Game Plan
 
 # Take HW1 code for freq table and modify it to
@@ -8,6 +76,12 @@ STA250 - HW 2 Notes
 # it into proper chunks.
 # Run the cluster methods described in class, making
 # modifications as necessary
+
+# Other methods to consider
+# C threads
+# Java threads
+# Hadoop & MapReduce
+# 
 
 # NEW IDEAS: Parallelizing the Tables
 
@@ -22,6 +96,21 @@ STA250 - HW 2 Notes
 Time = (-4999:5000)
 delay.tab = (data.frame(table(Time)))
 delay.tab[[2]] = 0
+
+
+# Goal: Given table1, see which Time values in table1
+# match those in delay.tab, then add the associated
+# Freq values in table1 to those in delay.tab
+
+# NOTE: This requires that all tables be the SAME SIZE
+# so first standardize the tables used.
+
+if(delay.tab[[1]] == delays.calb[[1]])
+{
+    delay.tab[[2]] = delays.calb[[2]]
+}
+
+
 
 delays.table = function(files, table){
     # Splits the nodes files into old and new formats
@@ -62,8 +151,13 @@ delays.table = function(files, table){
     delays = readLines(con) # contains all arrival delays
     close(con) # Closes defined connection
     delays = as.numeric(delays) # removes parentheses
+    
+    # Taking standardized frequency table, add up counts for
+    # each possible Time value
+    
+    table
+    table[, count := length(unique(delays))]
     # Forms frequency table
-    delays.all = data.frame(table(delays))
     # List all possible delay times, removing NAs
     delays.all = delays.all[1:nrow(delays.all)-1,] 
     delays.all # returns delay table
