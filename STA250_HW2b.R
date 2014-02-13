@@ -1,17 +1,14 @@
-# STA 250 HW 2 - Method 2: Using R & C in AirlineDelays
+# STA 250 HW 2 - Method 2
+# Using R & C code with AirlineDelays package
 
+# Basic setup
 
-# Current issues:
-#   * Values are appearing in the wrong places
-#   * How are NA values handled? They don't appear in tables
-#   * Single file works, but parallel threads crashes R
-#       possibly due to use of exit(1) in readRecords.c?
-#       What is the PROBLEM-ERROR suggested replacement?
-
-
+# Set working directory to a folder with all CSV files
 setwd("~/Desktop/STA_250_HW1")
 
-# First identify the files to subject to clustering
+# First identify the files to read in
+# This is divided into old (pre-2008) and new (2008 and on)
+# This only gives the initial filenames--need full paths too
 files = list.files(pattern="csv$")
 files.old = files[grep('1[0-9]{3}.csv|200[0-7]{1}.csv', files)]
 files.new = files[grep('[a-z].csv', files)]
@@ -20,39 +17,69 @@ files.new = files[grep('[a-z].csv', files)]
 files.old = paste(getwd(),"/",files.old, sep = "")
 files.new = paste(getwd(),"/",files.new, sep = "")
 
+# Organizes files into a list that the C code can read
 filelist = as.list(c(files.old,files.new))
 
 library(AirlineDelays) # First load the package
 
-fieldNums = c(rep(14L,21), rep(44L, 60))
+# This is a vector indicating which column number to read
+# for each file. Old & new files use columns 15 and 45
+# respectively, but in C we start counting at 0, so we use
+# 14 and 44 instead.
+fieldNums = c(rep(14L, length(files.old)),
+              rep(44L, length(files.new)))
 
-start.t = proc.time()
-delays.t = getDelayTable_thread(filelist, fieldNum = fieldNums, numThreads = 81L)
-time.t = proc.time() - start.t
 
-# THIS ALL WORKS in shell. And in 51 seconds to boot!
+Rprof("/tmp/readSelectedLines.prof") # R profiling
 
-# *** Code Edits ***
+start = proc.time()
+              
+# This R function calls C code to read entries line by line.
+# filelist is a list of all files to read
+# fieldNum is a vector of column numbers to read, as above
+# numThreads MUST equal the number of files being entered,
+# or else the R session will abort.
 
-# Must edit code to specify PACKAGE="AirlineDelays"
-# Otherwise, dll file search will be limited
-getDelayTable = edit(getDelayTable)
+delays2 = getDelayTable_thread(filelist, fieldNum = fieldNums, numThreads = 81L)
 
-# EDIT WINDOW
-function (filename, fieldNum = getFieldNum(filename)) 
-{
-    tt = .Call("R_getFileDelayTable", path.expand(filename), 
-               TRUE, as.integer(fieldNum), PACKAGE="AirlineDelays")
-    tt[tt > 0]
-}
+names(delays2) # These are the factor levels
+as.numeric(delays2) # These are the actual values
 
-getDelayTable_thread = edit(getDelayTable_thread)
+# This puts the data frame in the same form as Method 1
+# for ease of comparison
+delays2.df = data.frame(names(delays2), as.numeric(delays2))
 
-# EDIT WINDOW
-function (files, fieldNum = sapply(files, getFieldNum), numThreads = 4L) 
-{
-    tt = .Call("R_threaded_multiReadDelays", files, as.integer(numThreads), 
-               TRUE, as.integer(fieldNum), PACKAGE="AirlineDelays")
-    tt[tt > 0]
-}
+# GETTING RELEVANT VALUES
 
+# All possible delay times
+d.time = as.numeric(as.matrix(delays2.df[1]))
+# Frequency of each time
+d.count = as.numeric(as.matrix(delays2.df[2]))
+
+n = sum(d.count) # Number of entries
+sum.prod = sum(d.time*d.count) # sum of products
+sum.prod2 = sum((d.time^2)*d.count) # sum of counts by time squared
+
+# Mean of the values
+# Takes sum of all products and divides by total # entries
+mu = mean((sum.prod)/n)
+
+# Median of the values
+# Orders all values and takes middle one
+med = sort(rep(d.time,d.count))[n/2]
+
+# Std. dev. of the values
+# Uses formula for variance (with n-1 correction),
+# then takes square root
+sd = sqrt((sum.prod2 - (sum.prod^2)/n)/(n-1))
+
+time = proc.time() - start
+Rprof(NULL)
+delay.cr.prof = summaryRprof("/tmp/readSelectedLines.prof")$by.self
+
+# Results for C and R code
+results.cr = list(time = time, results = c(mean = mu, median = med, sd = sd),
+                    system = Sys.info(),  session = sessionInfo(),
+                    computer = c(RAM = "16 GB 1600 MHz DDR3",
+                                 CPU = "2.6 GHz Intel Core i7",
+                                 Software = "OS X 10.8.5 (12F45)"))
