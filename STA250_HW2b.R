@@ -7,24 +7,30 @@
 #   * Single file works, but parallel threads crashes R
 #       possibly due to use of exit(1) in readRecords.c?
 #       What is the PROBLEM-ERROR suggested replacement?
-#   * Use GDB for debugging:  R -d GDB
 
-# ssh into hilbert and do everything in there
 
-readrecord: change how NA vlaues
+setwd("~/Desktop/STA_250_HW1")
 
-R -d gdb
-run
-library(airlineDelays)
-ls(2)
+# First identify the files to subject to clustering
+files = list.files(pattern="csv$")
+files.old = files[grep('1[0-9]{3}.csv|200[0-7]{1}.csv', files)]
+files.new = files[grep('[a-z].csv', files)]
 
+# Properly gives files their entire pathnames
+files.old = paste(getwd(),"/",files.old, sep = "")
+files.new = paste(getwd(),"/",files.new, sep = "")
+
+filelist = as.list(c(files.old,files.new))
 
 library(AirlineDelays) # First load the package
 
-test = getDelayTable(path.expand("~/Desktop/STA_250_HW1/1987.csv"), 15L)
+fieldNums = c(rep(14L,21), rep(44L, 60))
 
-path.expand("~/Desktop/STA_250_HW1/testfile.csv")
+start.t = proc.time()
+delays.t = getDelayTable_thread(filelist, fieldNum = fieldNums, numThreads = 81L)
+time.t = proc.time() - start.t
 
+# THIS ALL WORKS in shell. And in 51 seconds to boot!
 
 # *** Code Edits ***
 
@@ -50,4 +56,3 @@ function (files, fieldNum = sapply(files, getFieldNum), numThreads = 4L)
     tt[tt > 0]
 }
 
-# Should also edit readRecords.h to be 5000 and 10000, not 2000 and 4000

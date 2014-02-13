@@ -5,21 +5,34 @@ STA250 - HW 2 Notes
 
 # Working with a single Delay Table
 
-
+# This produces the correct table. Just needed 14L, not 15L.
 start = proc.time()
 delays2 = getDelayTable(path.expand("~/Desktop/STA_250_HW1/1988.csv"),
-                     15L)
+                     14L)
 time = proc.time() - start
+
+delays2 = getDelayTable(path.expand("~/Desktop/STA_250_HW1/2008_May.csv"), 44L)
 
 # Working with multiple Delay Tables
 
 filelist = list(path.expand("~/Desktop/STA_250_HW1/1988.csv"),
                 path.expand("~/Desktop/STA_250_HW1/1989.csv"),
                 path.expand("~/Desktop/STA_250_HW1/1990.csv"),
-                path.expand("~/Desktop/STA_250_HW1/1991.csv"))
+                path.expand("~/Desktop/STA_250_HW1/1991.csv"),
+                path.expand("~/Desktop/STA_250_HW1/1992.csv"),
+                path.expand("~/Desktop/STA_250_HW1/1993.csv"),
+                path.expand("~/Desktop/STA_250_HW1/1994.csv"),
+                path.expand("~/Desktop/STA_250_HW1/1995.csv"))
+
+filelist = list(path.expand("~/Desktop/STA_250_HW1/2008_May.csv"),
+                path.expand("~/Desktop/STA_250_HW1/2008_June.csv"),
+                path.expand("~/Desktop/STA_250_HW1/2008_July.csv"),
+                path.expand("~/Desktop/STA_250_HW1/2008_August.csv"))
+
+fieldNums = rep(44L, 4)
 
 start.t = proc.time()
-delays.t = getDelayTable_thread(filelist,15L)
+delays.t = getDelayTable_thread(filelist, fieldNum = fieldNums, numThreads = 4L)
 time.t = proc.time() - start.t
 
 
@@ -28,11 +41,38 @@ as.numeric(delays2) # These are the actual values
 
 delays2.df = data.frame(names(delays2), as.numeric(delays2))
 
+
 x = as.numeric(names(delays2))
 reps = as.numeric(delays2)
-
 # This produces all the untabled values
 testrep = rep(x, reps) 
+
+# GETTING RELEVANT VALUES
+
+# All possible delay times
+d.time = as.numeric(as.matrix(delays2.df[1]))
+# Frequency of each time
+d.count = as.numeric(as.matrix(delays2.df[2]))
+
+n = sum(d.count) # Number of entries
+sum.prod = sum(d.time*d.count) # sum of products
+sum.prod2 = sum((d.time^2)*d.count) # sum of counts by time squared
+
+# Mean of the values
+# Takes sum of all products and divides by total # entries
+mu = mean((sum.prod)/n)
+
+# Median of the values
+# Orders all values and takes middle one
+med = sort(rep(d.time,d.count))[n/2]
+
+# Std. dev. of the values
+# Uses formula for variance (with n-1 correction),
+# then takes square root
+sd = sqrt((sum.prod2 - (sum.prod^2)/n)/(n-1))
+
+
+
 
 
 # *** METHOD 1 Single File Test ***
