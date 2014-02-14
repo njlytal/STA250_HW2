@@ -1,5 +1,5 @@
+# ****************************************
 # STA 250 HW 2 - METHOD 1: Clustering in R
-
 
 # Basic setup
 setwd("~/Desktop/STA_250_HW1")
@@ -131,10 +131,7 @@ results.calb = list(time = time, results = c(mean = mu, median = med, sd = sd),
 # clusterApplyLb takes 5/8 the time of original method to complete.
 # Better but not ideal yet. In a perfect world, would cut
 # down to <1/3, but this requires the table construction
-# to be parallelized.
-# I can get lists of frequency tables in delays(), BUT I
-# haven't refined a way to combine them smoothly yet.
-# Currently exploring options in STA250_HW2Notes.R
+# to be parallelized as well.
 
 # Currently, gain is noticeable but NOT as big as expected.
 # Mainly, this is because the table construction itself is

@@ -3,6 +3,10 @@ STA250 - HW 2 Notes
 # ****************************
 # **** NOTES FOR METHOD 2 ****
 
+# results.nonpar = Non-parallel R results (from HW1b)
+# results.calb = clusterApplyLB results
+# results.cr = C thread results
+
 # Working with a single Delay Table
 
 # This produces the correct table. Just needed 14L, not 15L.
@@ -90,18 +94,6 @@ delays = data.frame(table(delays))
 delays = delays[1:nrow(delays)-1,] 
 # All possible delay times
 
-# There are DIFFERENCES BETWEEN THE TWO DATAFRAMES!
-# Debugging time
-
-# delays2: probably not 44 instances of "247" "315" and "1320"
-
-# delays: there are 44 instances of "-56" "-57" "270" and "273" 
-
-
-
-
-
-
 
 
 
@@ -122,6 +114,10 @@ delays = delays[1:nrow(delays)-1,]
 # Java threads
 # Hadoop & MapReduce
 # 
+
+# I can get lists of frequency tables in delays(), BUT I
+# haven't refined a way to combine them smoothly yet.
+# Exploring options here
 
 # NEW IDEAS: Parallelizing the Tables
 
