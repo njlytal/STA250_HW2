@@ -16,6 +16,7 @@ AirlineDelays - This folder contains the C threaded method as seen on the
 sta250 git repository, with a few slight changes.
 
 ******ADDITIONAL FILES******
+
 HW2_Report - Report for the assignment. Separate copy will be sent by email.
 
 STA250_HW2a.RData
